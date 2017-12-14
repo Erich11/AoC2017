@@ -250,15 +250,15 @@ FileIn(name)
 	Q
 	
 	// 10.12.2017
-19	// Knot Hash
-	S in = "129,154,49,198,200,133,97,254,41,6,2,1,255,0,191,108"
+19(in)	// Knot Hash
+	;S in = "129,154,49,198,200,133,97,254,41,6,2,1,255,0,191,108"
+	N i,j
 	F i=1:1:$L(in) S $Li(in2,i) = $A($E(in,i))
 	S in = in2 _ $LB(17, 31, 73, 47, 23)
 	S list = "" F i=0:1:255 S $Li(list,i+1)=i
 	S pos = 1, skip=0
 	
-	F round = 1:1:64 {
-		W !,round
+	F round = 1:1:64 {	
 		S ptr=0 While $ListNext(in,ptr,length) {
 			// Kopie erstellen
 			S end = pos + length - 1
@@ -293,8 +293,8 @@ FileIn(name)
 		S:number<16 hex = hex_0
 		S hex = hex _ $ZHex(number)
 	}
-	W !,hex	
-	Q
+	;W !,hex	
+	Q hex
 	
 	// 11.12.2017
 21
@@ -376,4 +376,46 @@ Travel(x)	// Travels down the pipes
 		Q:severity=0
 	}
 	W !,"Shortest delay: "_delay
+	Q
+
+
+	//14.12.2017
+27	// Disk Defrag Used Bits
+	S in = "nbysizxe"
+	S hc(0)=0,hc(1)=1,hc(2)=1,hc(3)=2,hc(4)=1,hc(5)=2,hc(6)=2,hc(7)=3,hc(8)=1,hc(9)=2,hc("A")=2,hc("B")=3,hc("C")=2,hc("D")=3,hc("E")=3,hc("F")=4
+	S used=0
+	F i=0:1:127 {
+		S hash = $$19(in_"-"_i)
+		F j=1:1:32 S used=used+hc($E(hash,j)) ;S bs(i) = $G(bs(i)) _ h2b($E(hash,j)) 
+	}
+	W used
+	Q
+	
+28	// Disk Defrag Regions
+	S in = "nbysizxe"
+	F i=0:1:127 {
+		S hash = $$19(in_"-"_i)
+		F j=0:1:31 { S b=$Factor($ZHEX($E(hash,j+1))) F k=0:1:3 { S bs(i,4*j+k) = $Bit(b,4-k) } }
+	}
+	// bs(#) = bitstring
+	S region=1
+	F i=0:1:127 {
+		F j=0:1:127 {
+			If bs(i,j) {
+				S gn = +$G(bs(i,j-1)), gw = +$G(bs(i-1,j))
+				If 'gn&&'gw { S region=region+1, bs(i,j)=region, M(region,i,j)="" }
+				ElseIf gn&&'gw || (gn=gw) { S bs(i,j)=gn, M(gn,i,j)="" }
+				ElseIf 'gn&&gw { S bs(i,j)=gw, M(gw,i,j)="" }
+				Else { D SameReg(gn,gw) }
+			}			
+		}
+	}
+	S r="" F i=0:1 S r=$O(M(r)) Q:r=""
+	W i
+	Q
+SameReg(a,b)
+	S:b<a c=b,b=a,a=c // a=lower region
+	S M(b,i,j)=""
+	S x="" F { S x=$O(M(b,x)) Q:x=""  S y="" F { S y=$O(M(b,x,y)) Q:y=""  S bs(x,y)=a } }
+	M M(a)=M(b) K M(b)
 	Q
