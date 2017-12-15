@@ -418,4 +418,25 @@ SameReg(a,b)
 	S M(b,i,j)=""
 	S x="" F { S x=$O(M(b,x)) Q:x=""  S y="" F { S y=$O(M(b,x,y)) Q:y=""  S bs(x,y)=a } }
 	M M(a)=M(b) K M(b)
+	Q	
+
+	//15.12.2017
+29	// Dueling Generators
+	S mA = 16807, mB = 48271, mod = 2147483647
+	S match = 0, A = 634, B = 301
+	F i=1:1:40000000 {
+		S A = A*mA#mod, B=B*mB#mod
+		S:(A#65536)=(B#65536) match=match+1
+	}
+	W match
+	Q
+30
+	S mA = 16807, mB = 48271, mod = 2147483647
+	S match = 0, A = 634, B = 301
+	F i=1:1:5000000 {
+		Do { S A = A*mA#mod } While A#4
+		Do { S B = B*mB#mod } While B#8
+		S:(A#65536)=(B#65536) match=match+1
+	}
+	W match
 	Q
