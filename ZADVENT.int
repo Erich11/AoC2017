@@ -440,3 +440,51 @@ SameReg(a,b)
 	}
 	W match
 	Q
+	
+	// 16.12.2017
+31	S file = ##class(%File).%New("C:\amd\day16.txt")
+	D file.Open("RS")
+	S A=""
+	While 'file.AtEnd {
+		S a=file.ReadLine()
+		S A = A _ $LFS(a)
+	}
+	D file.Close()
+	F i=1:1:16 S $Li(P,i) = $C($A("a")+i-1)
+	S list(0) = P
+	
+	F gaga=1:1:1000000000 {
+		S ptr=0 While $ListNext(A,ptr,m) {
+			S c=$E(m),d=$E(m,2,*),e=$P(d,"/",1),f=$P(d,"/",2)
+			If c="s" { S P=$Li(P,17-e,16) _ $Li(P,1,16-e) }
+			ElseIf c="x" { S t=$Li(P,e+1), $Li(P,e+1)=$Li(P,f+1),$Li(P,f+1)=t }
+			ElseIf c="p" { S e=$LF(P,e),f=$LF(P,f) S t=$Li(P,e), $Li(P,e)=$Li(P,f),$Li(P,f)=t }
+		}
+		S list(gaga) = P
+		If P=list(0) W $LTS(list(1000000000#gaga),"") Q
+	}
+	Q
+
+	// 17.12.2017
+33	// Spinlock
+	S in = 359
+	S buffer = $LB(0), pos = 1
+	F i=1:1:2017 {
+		S move = in#i
+		S pos = pos + move + 1
+		S:pos>i pos=pos-i
+		S buffer = $Li(buffer,1,pos) _ $LB(i) _ $Li(buffer,pos+1,*)
+	}
+	W $Li(buffer,pos+2)
+	Q
+34	// Spinlock
+	S in = 359
+	S pos = 1
+	F i=1:1:50000000 {
+		S move = in#i
+		S pos = pos + move + 1
+		S:pos>i pos=pos-i
+		S:pos=1 afterZero=i
+	}
+	W afterZero
+	Q	
