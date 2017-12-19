@@ -520,3 +520,36 @@ SameReg(a,b)
 	Do { H 0.01 } While ^advent("run",0) || ^advent("run",1)
 	W ^advent("snd",1)	
 	Q
+	
+	// 19.12.2017
+37	D FileIn(19)
+	S i=1 While 'file.AtEnd {
+		S A=file.ReadLine() Continue:A=""
+		F j=1:1:$L(A) { S:$E(A,j)'=" " M(i,j)=$E(A,j) }
+		S i=i+1
+	}
+	
+	S y=$O(M(1,"")), x=1, dir="s", word="", steps=1	// Start
+		
+	Do
+	{
+		Do
+		{
+			S x=x+$Case(dir,"n":-1,"s":1,:0)
+			S y=y+$Case(dir,"w":-1,"e":1,:0)
+			S steps=steps+1
+			Q:'$D(M(x,y))
+			S:M(x,y)?1A word=word_M(x,y)	
+					
+		} While M(x,y)'="+"
+		
+		// change direction
+		If (dir="s") || (dir="n") { If $G(M(x,y-1))="-" { S dir="w" } Else { S dir="e" } }
+		ElseIf $G(M(x-1,y))="|" { S dir="n" }
+		Else { S dir="s" }
+		S steps=steps+1
+	
+	} While $D(M(x,y))
+	
+	W word,!,steps
+	Q
