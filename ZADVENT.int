@@ -553,3 +553,53 @@ SameReg(a,b)
 	
 	W word,!,steps
 	Q
+	
+	// 20.12.2017
+38	// Particle Swarm
+	D FileIn(20)
+	S t = 1000000000, lowest="" 
+	F i=0:1{
+		S A=file.ReadLine() Continue:A=""
+
+		S v=$P(A,"v=<",2), vx=+v, vy=$P(v,",",2), vz=+$P(v,",",3)
+		S a=$P(A,"a=<",2), ax=+a, ay=$P(a,",",2), az=+$P(a,",",3)
+		
+		S dt = $ZABS(vx+(ax*t)) + $ZABS(vy+(ay*t)) + $ZABS(vz+(az*t))
+		S:dt<lowest||(lowest="") lowest=dt, particle=i
+		
+		Q:file.AtEnd	
+	}
+	W particle
+	Q
+39	// Particle collision
+	D FileIn(20)
+	F i=0:1{
+		S A=file.ReadLine() Continue:A=""
+		
+		S p=$P(A,"p=<",2), px=+p, py=$P(p,",",2), pz=+$P(p,",",3)
+		S v=$P(A,"v=<",2), vx=+v, vy=$P(v,",",2), vz=+$P(v,",",3)
+		S a=$P(A,"a=<",2), ax=+a, ay=$P(a,",",2), az=+$P(a,",",3)
+		
+		S particle(i) = $LB(px,py,pz,vx,vy,vz,ax,ay,az)
+		
+		Q:file.AtEnd	
+	}
+	
+	F i=1:1:1000
+	{
+		K particleMap
+		S p="" F { S p=$O(particle(p),1,d) Q:p=""
+			S vx = $LG(d,4)+$LG(d,7), x = $LG(d,1) + vx
+			S vy = $LG(d,5)+$LG(d,8), y = $LG(d,2) + vy
+			S vz = $LG(d,6)+$LG(d,9), z = $LG(d,3) + vz
+			
+			S particle(p) = $LB(x,y,z,vx,vy,vz,$LG(d,7),$LG(d,8),$LG(d,9))
+			
+			If $D(particleMap(x,y,z),toKill) { K particle(toKill), particle(p) }
+			Else { S particleMap(x,y,z)=p }
+		}
+	}
+	
+	S p="" F i=0:1 S p=$O(particle(p)) Q:p=""
+	W i
+	Q
