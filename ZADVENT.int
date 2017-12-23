@@ -769,3 +769,33 @@ Trans(in,div)
 	}
 	W infects
 	Q
+
+	// 23.12.2017
+44	// Co-Prozessor
+	D FileIn(23)
+	S i=1 While 'file.AtEnd {
+		S A=file.ReadLine() Continue:A=""
+		S IN(i)=A
+		S i=i+1
+	} D file.Close()
+	S mul=0
+	
+	S l=$O(IN(""),-1),index=1 F {
+		Q:index<1||(index>l)
+		S inst = IN(index)
+		S action = $P(inst," ",1), a=$P(inst," ",2), b=$P(inst," ",3)
+		
+		If action="set" { S reg(a) = $S($ISVALIDNUM(b):b,1:$G(reg(b))) }
+		ElseIf action="sub" { S reg(a) = $G(reg(a))-$S($ISVALIDNUM(b):b,1:$G(reg(b))) }
+		ElseIf action="mul" { S reg(a) = $G(reg(a))*$S($ISVALIDNUM(b):b,1:$G(reg(b))), mul=mul+1 }
+		
+		If action="jnz" && ($S($ISVALIDNUM(a):a,1:+$G(reg(a)))'=0) { S index=index+$S($ISVALIDNUM(b):b,1:$G(reg(b))) }
+		Else { S index=index+1 }
+	}
+	W mul
+	Q
+45	// Value of h
+	S b=99*100+100000, c=b+17000, h=0
+	F i=b:17:c { F j=2:1:i-1 { If '(i#j) S h=h+1 Q } }
+	W h
+	Q
