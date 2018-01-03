@@ -799,3 +799,34 @@ Trans(in,div)
 	F i=b:17:c { F j=2:1:i-1 { If '(i#j) S h=h+1 Q } }
 	W h
 	Q
+
+	// 24.12.2017
+46	// Electromagnetic Moat
+	D FileIn(24)
+	While 'file.AtEnd {
+		S A=file.ReadLine() Continue:A=""
+		S p1=$P(A,"/",1), p2=$P(A,"/",2)
+		S B(p1,p2) = $G(B(p1,p2))+1, B(p2,p1) = $G(B(p2,p1))+1		
+	}
+	Do file.Close()
+	
+	S F=0, L=0 M P(0)=B D Path(0,0,0) W F
+	Q
+Path(a,b,r)
+	If $D(P(r,a,b)) S P(r,a,b) = P(r,a,b)-1 K:P(r,a,b)=0 P(r,a,b)
+	If $D(P(r,b,a)) S P(r,b,a) = P(r,b,a)-1 K:P(r,b,a)=0 P(r,b,a)
+	S a="" F  S a=$O(P(r,b,a)) Q:a=""  M P(r_","_b_","_a)=P(r) D Path(b,a,r_","_b_","_a)
+	;K P(r) S r=$LFS(r), s=0, p=0 While $ListNext(r,p,v) { S s=s+v } S:s>F F=s					// Part 1
+	K P(r) S l=$L(r,",") If l>=L S:l>L F=0 S L=l S r=$LFS(r), s=0, p=0 While $ListNext(r,p,v) { S s=s+v } S:s>F F=s	// Part 2
+	Q
+
+	// 25.12.2017
+48	// Turing Machine
+	S p=0,S="A" F i=1:1:12368930 { D @S }
+	S p="",c=0 F { S p=$O(S(p),1,v) Q:p=""  S c=c+v } W c Q
+A	If '$G(S(p)) { S S(p)=1,p=p+1,S="B" } Else { S S(p)=0,p=p+1,S="C" } Q
+B	If '$G(S(p)) { S S(p)=0,p=p-1,S="A" } Else { S S(p)=0,p=p+1,S="D" } Q
+C	If '$G(S(p)) { S S(p)=1,p=p+1,S="D" } Else { S S(p)=1,p=p+1,S="A" } Q
+D	If '$G(S(p)) { S S(p)=1,p=p-1,S="E" } Else { S S(p)=0,p=p-1,S="D" } Q
+E	If '$G(S(p)) { S S(p)=1,p=p+1,S="F" } Else { S S(p)=1,p=p-1,S="B" } Q
+F	If '$G(S(p)) { S S(p)=1,p=p+1,S="A" } Else { S S(p)=1,p=p+1,S="E" } Q
